@@ -19,7 +19,6 @@ class Book extends Model
         'publication_year',
         'description',
         'cover_image_path',
-        'total_copies',
     ];
 
     protected function casts(): array
@@ -37,6 +36,22 @@ class Book extends Model
     public function copies(): HasMany
     {
         return $this->hasMany(BookCopy::class);
+    }
+
+    /** Physical copies currently available to circulate. */
+    public function availableCopies(): HasMany
+    {
+        return $this->copies()->where('status', 'Available');
+    }
+
+    public function availableCopiesCount(): int
+    {
+        return $this->availableCopies()->count();
+    }
+
+    public function totalCopiesCount(): int
+    {
+        return $this->copies()->count();
     }
 
     public function borrowRequests(): HasMany

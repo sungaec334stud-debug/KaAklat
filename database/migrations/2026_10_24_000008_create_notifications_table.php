@@ -27,7 +27,10 @@ return new class extends Migration
             $table->foreignId('loan_id')
                   ->nullable()
                   ->constrained('loans')
-                  ->nullOnDelete();
+                  // loan_id is the base of automated_loan_id, a stored generated
+                  // column. MySQL does not allow SET NULL on such a FK column.
+                  // Restrict deletion to preserve notice history and FK integrity.
+                  ->restrictOnDelete();
 
             $table->foreignId('hold_id')
                   ->nullable()
@@ -40,13 +43,37 @@ return new class extends Migration
             // NULL = unread.
             $table->timestamp('read_at')->nullable();
 
+            // Manual notices may be resent after the UI warns the staff member.
+            $table->boolean('is_automated')->default(false);
+
+            // Application-local calendar day used for deterministic reminder
+            // deduplication; populated by the Notification model on creation.
+            $table->date('notification_day');
+
+            // MySQL lacks partial unique indexes. These generated values are
+            // populated only for automated loan notices, allowing manual
+            // resends and non-loan notices while preventing daily duplicates.
+            $table->unsignedBigInteger('automated_loan_id')
+                  ->nullable()
+                  ->storedAs("CASE WHEN `is_automated` = 1 AND `loan_id` IS NOT NULL THEN `loan_id` ELSE NULL END");
+            $table->string('automated_type')
+                  ->nullable()
+                  ->storedAs("CASE WHEN `is_automated` = 1 AND `loan_id` IS NOT NULL THEN `type` ELSE NULL END");
+            $table->date('automated_notification_day')
+                  ->nullable()
+                  ->storedAs("CASE WHEN `is_automated` = 1 AND `loan_id` IS NOT NULL THEN `notification_day` ELSE NULL END");
+
             $table->timestamps();
 
             // Unread badge count query: user_id + read_at IS NULL.
             $table->index(['user_id', 'read_at']);
 
-            // Deduplication: prevent sending the same type for the same loan on the same day.
+            // Lookup index for loan history and the 24-hour resend warning.
             $table->index(['loan_id', 'type', 'created_at']);
+            $table->unique(
+                ['automated_loan_id', 'automated_type', 'automated_notification_day'],
+                'notifications_one_automated_loan_type_per_day',
+            );
         });
     }
 

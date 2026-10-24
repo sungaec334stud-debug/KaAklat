@@ -36,7 +36,8 @@ class Loan extends Model
 
     public function isOverdue(): bool
     {
-        return $this->status === 'Active' && $this->due_date->isPast();
+        return $this->status === 'Active'
+            && $this->due_date->lt(today(config('app.timezone')));
     }
 
     // -------------------------------------------------------------------------

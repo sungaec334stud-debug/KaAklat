@@ -15,6 +15,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Notification extends Model
 {
+    protected static function booted(): void
+    {
+        static::creating(function (self $notification): void {
+            if (!$notification->notification_day) {
+                $notification->notification_day = now(config('app.timezone'))->toDateString();
+            }
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'type',
@@ -23,12 +32,15 @@ class Notification extends Model
         'title',
         'body',
         'read_at',
+        'is_automated',
     ];
 
     protected function casts(): array
     {
         return [
-            'read_at' => 'datetime',
+            'read_at'          => 'datetime',
+            'is_automated'     => 'boolean',
+            'notification_day' => 'date',
         ];
     }
 

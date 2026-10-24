@@ -11,6 +11,41 @@ Add one entry every time an agent changes anything in the project. Put the newes
 
 ## Entries
 
+## 2026-10-25 — Codex — Oracle MySQL Application Database
+- **Summary:** Switched the local application `.env` target to the user-created Oracle MySQL `kaaklat` schema at `127.0.0.1:3307` using the local `kaaklat_app` account. Applied the complete Laravel schema after Laravel reported that the new schema had no migration table. Credentials remain only in the ignored `.env` file.
+- **Files:** `.env` (local ignored configuration, updated by the user); `docs/CHANGELOG.md`.
+- **Database migrations:** Applied all 16 migrations to Oracle MySQL Community Server 26.10.0, schema `kaaklat`.
+- **Testing:** `php artisan migrate` completed successfully. `php artisan migrate:status` reports all 16 migrations as Ran. A read-only `SELECT VERSION(), @@version_comment` confirmed `26.10.0 | MySQL Community Server - GPL`. The full schema test suite had previously passed on the separate `kaaklat_mysql_test` schema (9 tests, 20 assertions); it was not rerun as part of this application-schema migration.
+- **Known issues or follow-ups:** None for database setup. Keep `kaaklat_mysql_test` separate for PHPUnit; the suite refreshes its configured test database.
+
+## 2026-10-25 — Codex — MySQL Schema Compatibility
+- **Summary:** Changed the notifications-to-loans foreign key from `ON DELETE SET NULL` to `RESTRICT`. `notifications.loan_id` is the base column for a stored generated column used by automated-notice deduplication, and Oracle MySQL does not permit `SET NULL` on a foreign key over the base of a stored generated column. Restricting deletion also preserves notification history. Added a feature test for that deletion rule.
+- **Files:** `database/migrations/2026_10_24_000008_create_notifications_table.php`; `tests/Feature/DatabaseSchemaTest.php`; `docs/CHANGELOG.md`.
+- **Database migrations:** Edited an unapplied create migration. No database was migrated by this change.
+- **Testing:** PHP syntax checks passed for the edited migration and feature test; `git diff --check` passed. User ran the full suite on Oracle MySQL Community Server 26.10.0: 9 tests passed, 20 assertions.
+- **Known issues or follow-ups:** Deleting a loan that has notifications is intentionally rejected to preserve history. Revalidate against the exact Oracle MySQL version selected for production.
+
+## 2026-10-25 — Codex — MySQL Schema Verification Setup
+- **Summary:** Pointed PHPUnit at the user-created Oracle MySQL test schema on port 3307 and configured a dedicated least-privilege test account name. The test password is intentionally supplied through the invoking environment rather than stored in the repository.
+- **Files:** `phpunit.xml`; `docs/CHANGELOG.md`.
+- **Database migrations:** None. The test schema is not modified by this configuration change.
+- **Testing:** XML configuration was reviewed; the full suite was subsequently run by the user against Oracle MySQL Community Server 26.10.0 on `kaaklat_mysql_test`: 9 tests passed, 20 assertions.
+- **Known issues or follow-ups:** Test password remains supplied only through the user's PowerShell environment. The application `.env` was subsequently switched to Oracle MySQL `kaaklat` on port 3307 as recorded in the newer Oracle MySQL Application Database entry.
+
+## 2026-10-24 — Codex — Database Configuration
+- **Summary:** Switched the local application and example configuration from SQLite to Laravel's `mysql` connection, targeting `127.0.0.1:3306/kaaklat`. The prior SQLite file was empty, so no records needed to be copied. Created the empty `kaaklat` database on the installed MariaDB server and applied the complete schema.
+- **Files:** `.env` (local ignored configuration); `.env.example`; `config/database.php`; `docs/CHANGELOG.md`.
+- **Database migrations:** Applied all 16 existing migrations to `kaaklat` on MariaDB 10.4.32. No migration files were added during this configuration change.
+- **Testing:** `php artisan migrate` completed successfully; `php artisan migrate:status` reports all 16 migrations as Ran. `php artisan test` passed: 8 tests, 19 assertions against the dedicated `kaaklat_test` database on MariaDB 10.4.32.
+- **Known issues or follow-ups:** The `kaaklat` schema on MariaDB 10.4.32 is retained as a separate local database. The application `.env` was subsequently switched to Oracle MySQL; see the newer Oracle MySQL Application Database entry.
+
+## 2026-10-24 — Codex — Database Schema / Catalog / Notifications
+- **Summary:** Defined available inventory as the count of non-deleted copies whose status is `Available`; synchronized `books.total_copies` from BookCopy create, soft-delete, restore, and reassignment events. Enforced one loan per borrow request. Prevented duplicate automated loan notices per type/application-local day while allowing staff notices to be resent after a warning. Corrected overdue classification so loans due today are not marked overdue. Added schema tests and a guard requiring a dedicated database ending in `_test`.
+- **Files:** `app/Models/Book.php`; `app/Models/BookCopy.php`; `app/Models/Loan.php`; `app/Models/Notification.php`; `database/migrations/2026_10_24_000003_create_books_table.php`; `database/migrations/2026_10_24_000006_create_loans_table.php`; `database/migrations/2026_10_24_000008_create_notifications_table.php`; `phpunit.xml`; `tests/Feature/DatabaseSchemaTest.php`; `docs/CHANGELOG.md`.
+- **Database migrations:** Edited the unapplied create migrations for books, loans, and notifications. No new migration files. Test migrations ran only against the dedicated `kaaklat_test` database; the project `.env` database was not migrated.
+- **Testing:** `php -l` passed for changed PHP files. `php artisan test` passed: 8 tests, 19 assertions against MariaDB 10.4.32 using Laravel's `mysql` driver and the dedicated `kaaklat_test` database. These results are MariaDB compatibility checks, not Oracle MySQL verification.
+- **Known issues or follow-ups:** (1) Oracle MySQL schema compatibility was subsequently verified on MySQL Community Server 26.10.0; validate the exact production version before deployment. (2) The project `.env` targets MariaDB as documented in the later Database Configuration entry; the Oracle test suite uses a separate schema. (3) Bulk copy writes or mass deletes that bypass Eloquent model events must recalculate `total_copies`.
+
 ## 2026-10-24 — Cursor Grok 4.6 — Core Circulation
 - **Summary:** Added MySQL stored generated columns and unique indexes on the unapplied `holds` and `loans` create migrations: one Waiting/Ready hold per user and book; one unique `queue_position` per book among Waiting holds; one Active loan per book copy. Inactive historical rows generate NULL and are not blocked. No unique constraint was added for pending borrow requests. Reserved-copy foreign keys on `borrow_requests.book_copy_id` and `holds.book_copy_id` remain `restrictOnDelete`.
 - **Files:** `database/migrations/2026_10_24_000006_create_loans_table.php`; `database/migrations/2026_10_24_000007_create_holds_table.php`; `docs/CHANGELOG.md`.

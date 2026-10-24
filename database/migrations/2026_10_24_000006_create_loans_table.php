@@ -28,6 +28,10 @@ return new class extends Migration
                   ->constrained('borrow_requests')
                   ->nullOnDelete();
 
+            // A checked-out request creates at most one loan. Multiple NULLs
+            // remain valid for staff-created loans without a borrow request.
+            $table->unique('borrow_request_id', 'loans_one_per_borrow_request');
+
             $table->foreignId('checked_out_by')
                   ->constrained('users')
                   ->restrictOnDelete();

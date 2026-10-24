@@ -31,8 +31,9 @@ return new class extends Migration
             // Path to a locally stored cover image; no external URLs.
             $table->string('cover_image_path')->nullable();
 
-            // Stored for display. Updated by staff when copies are added/removed.
-            // Available copies are DERIVED: total_copies minus count of Reserved/Borrowed copies.
+            // Count of non-deleted physical copies. BookCopy keeps this in sync.
+            // Available copies are counted from book_copies.status = Available so
+            // Damaged and Lost copies are never reported as available.
             $table->unsignedSmallInteger('total_copies')->default(0);
 
             $table->timestamps();
