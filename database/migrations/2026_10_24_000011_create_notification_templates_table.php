@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('notification_templates', function (Blueprint $table) {
             $table->id();
 
-            // Matches the type codes used in notifications and email_delivery_log.
+            // Matches the type codes used in notifications and email_delivery_logs.
             $table->string('type')->unique();
 
             $table->string('subject');

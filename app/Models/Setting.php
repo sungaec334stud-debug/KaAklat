@@ -21,8 +21,10 @@ class Setting extends Model
     /**
      * Retrieve a setting value by key.
      * Returns the provided default when the key does not exist.
+     *
+     * Named getValue so it is not confused with Eloquent's query get().
      */
-    public static function get(string $key, mixed $default = null): mixed
+    public static function getValue(string $key, mixed $default = null): mixed
     {
         $setting = static::where('key', $key)->first();
 

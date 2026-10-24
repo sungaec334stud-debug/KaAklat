@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('email_delivery_log', function (Blueprint $table) {
+        Schema::create('email_delivery_logs', function (Blueprint $table) {
             $table->id();
 
             // Nullable: some transactional emails may target non-user addresses.
@@ -55,6 +55,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('email_delivery_log');
+        Schema::dropIfExists('email_delivery_logs');
     }
 };

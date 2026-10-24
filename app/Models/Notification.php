@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * This is distinct from Laravel's built-in database notification channel.
  * Do not import Illuminate\Notifications\Notification in the same file.
+ * Load a user's in-app notices via User::appNotifications(), never via
+ * `$user->notifications` (Laravel's Notifiable database-notification relation).
  */
 class Notification extends Model
 {

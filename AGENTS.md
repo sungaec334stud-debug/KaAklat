@@ -37,8 +37,8 @@ Table names below are conceptual names to guide discussion, not a finalized sche
 
 ### Cataloging and Inventory
 - **Purpose:** Maintain searchable book records and individually tracked physical copies, including CSV import.
-- **Entities/tables:** books, authors, categories, book_copies, audit_logs.
-- **Key rules:** Book records include title, author, category/genre, publication year, call number, ISBN, and copy totals. Normalize authors and categories into lookup tables; each book references one author and one category unless requirements are explicitly changed. Each physical copy has a unique accession number and status (Available, Reserved, Borrowed, Damaged, or Lost). Available copies cannot be negative or exceed total copies and must reflect copy status changes. Validate CSV rows and report row-level errors. Prevent deleting records with active loans or holds; retain historical references through soft deletion.
+- **Entities/tables:** books, book_copies, audit_logs.
+- **Key rules:** Book records include title, author, category/genre, publication year, call number, ISBN, and copy totals. Author and category are free-text fields on `books`, not lookup tables. Each physical copy has a unique accession number and status (Available, Reserved, Borrowed, Damaged, or Lost). Available copies cannot be negative or exceed total copies and must reflect copy status changes. Validate CSV rows and report row-level errors. Prevent deleting records with active loans or holds; retain historical references through soft deletion.
 
 ### Due-Date and Overdue Notifications
 - **Purpose:** Monitor loan status and deliver in-app and email reminders, including staff-initiated messages.

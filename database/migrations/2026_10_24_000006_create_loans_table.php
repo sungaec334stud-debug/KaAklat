@@ -58,6 +58,13 @@ return new class extends Migration
             $table->index(['book_copy_id', 'status']);
             $table->index('due_date');
             $table->index('returned_at');
+
+            // One Active loan per copy. Returned and Lost rows store NULL here
+            // so historical loans do not block a later Active loan on the copy.
+            $table->unsignedBigInteger('active_copy_id')
+                  ->nullable()
+                  ->storedAs("CASE WHEN `status` = 'Active' THEN `book_copy_id` ELSE NULL END");
+            $table->unique('active_copy_id', 'loans_one_active_per_copy');
         });
     }
 

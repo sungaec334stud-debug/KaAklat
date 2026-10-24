@@ -23,10 +23,12 @@ return new class extends Migration
                   ->constrained('books')
                   ->restrictOnDelete();
 
+            // Assigned on approval. Restrict delete so a reserved copy cannot
+            // disappear while this request still points at it.
             $table->foreignId('book_copy_id')
                   ->nullable()
                   ->constrained('book_copies')
-                  ->nullOnDelete();
+                  ->restrictOnDelete();
 
             // Status lifecycle:
             //   Pending    → awaiting librarian action; copy not yet reserved

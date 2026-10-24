@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmailDeliveryLog extends Model
 {
+    // Uses Eloquent's default table name: email_delivery_logs.
+
     protected $fillable = [
         'user_id',
         'to_address',

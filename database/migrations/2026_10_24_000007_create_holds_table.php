@@ -24,10 +24,12 @@ return new class extends Migration
                   ->constrained('books')
                   ->restrictOnDelete();
 
+            // Assigned when the hold becomes Ready. Restrict delete so a reserved
+            // copy cannot disappear while this hold still points at it.
             $table->foreignId('book_copy_id')
                   ->nullable()
                   ->constrained('book_copies')
-                  ->nullOnDelete();
+                  ->restrictOnDelete();
 
             // FIFO position within the queue for this title.
             // Assigned at insert: MAX(queue_position) + 1 for the book, inside a transaction.
@@ -63,11 +65,26 @@ return new class extends Migration
 
             // Scheduler: find holds whose pickup deadline has lapsed.
             $table->index('pickup_deadline');
-        });
 
-        // MySQL does not support partial indexes natively.
-        // The uniqueness rule (one active hold per patron per title) is enforced
-        // at the application layer before every insert.
+            // MySQL has no partial unique indexes. Nullable stored generated
+            // columns enforce uniqueness only for active rows; inactive history
+            // stores NULL and does not block new holds.
+            $table->unsignedBigInteger('active_user_id')
+                  ->nullable()
+                  ->storedAs("CASE WHEN `status` IN ('Waiting', 'Ready') THEN `user_id` ELSE NULL END");
+            $table->unsignedBigInteger('active_book_id')
+                  ->nullable()
+                  ->storedAs("CASE WHEN `status` IN ('Waiting', 'Ready') THEN `book_id` ELSE NULL END");
+            $table->unique(['active_user_id', 'active_book_id'], 'holds_one_active_per_user_book');
+
+            $table->unsignedBigInteger('waiting_book_id')
+                  ->nullable()
+                  ->storedAs("CASE WHEN `status` = 'Waiting' THEN `book_id` ELSE NULL END");
+            $table->unsignedSmallInteger('waiting_queue_position')
+                  ->nullable()
+                  ->storedAs("CASE WHEN `status` = 'Waiting' THEN `queue_position` ELSE NULL END");
+            $table->unique(['waiting_book_id', 'waiting_queue_position'], 'holds_waiting_fifo_position');
+        });
     }
 
     /**

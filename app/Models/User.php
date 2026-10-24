@@ -104,6 +104,12 @@ class User extends Authenticatable
         return $this->hasMany(Hold::class);
     }
 
+    /**
+     * Custom in-app notifications stored in the `notifications` table.
+     *
+     * Use this relation for KaAklat notices. Do not use `$user->notifications`,
+     * which is Laravel's database-notification channel from the Notifiable trait.
+     */
     public function appNotifications(): HasMany
     {
         return $this->hasMany(Notification::class);
