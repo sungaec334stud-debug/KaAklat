@@ -2,7 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +27,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        RateLimiter::for('login', function (Request $request) {
+            $email = $request->input('email');
+            $key = Str::transliterate(Str::lower(is_string($email) ? trim($email) : '').'|'.$request->ip());
+
+            return Limit::perMinute(5)->by($key);
+        });
+
+        Gate::define('manage-staff', fn (User $user): bool =>
+            $user->role === 'admin' && $user->is_active && $user->hasVerifiedEmail()
+        );
+
+        Event::listen(Verified::class, function (Verified $event): void {
+            $event->user->forceFill(['is_active' => true])->save();
+        });
     }
 }

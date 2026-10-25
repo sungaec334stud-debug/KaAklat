@@ -18,6 +18,11 @@ class DatabaseSchemaTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function beforeRefreshingDatabase(): void
+    {
+        $this->assertSafeTestDatabase();
+    }
+
     protected function setUp(): void
     {
         $connection = getenv('DB_CONNECTION') ?: '';

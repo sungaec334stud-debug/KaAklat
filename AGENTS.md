@@ -71,7 +71,7 @@ Agents must refuse requests to add these features unless the project owner expli
 
 ## Workflow rules for agents
 1. Work on **one module or task at a time**, and change only what the task asks for.
-2. Read `AGENTS.md` and `docs/CHANGELOG.md` before starting.
+2. Read `AGENTS.md` and the main changelog (`docs/CHANGELOG.md`) before starting, then consult linked archives and reports relevant to the task.
 3. Do not change files outside the task's scope.
 4. Ask before making architectural decisions or adding dependencies.
 5. Write or update tests for what you build, following the existing test conventions.
